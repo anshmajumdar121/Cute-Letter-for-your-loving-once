@@ -1,1593 +1,894 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <title>A Letter for Nancy</title>
-
     <script src="https://cdn.tailwindcss.com"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-
     <style>
-
         :root {
-
             --envelope-bg: #ffe4e1;
-
             --envelope-dark: #ffb7c5;
-
             --envelope-darker: #ff9eb5;
-
         }
 
         * {
-
             -webkit-tap-highlight-color: transparent;
-
             margin: 0;
-
             padding: 0;
-
             box-sizing: border-box;
-
         }
 
         body {
-
             font-family: 'Nunito', sans-serif;
-
             background: linear-gradient(135deg, #fff0f5 0%, #ffe4e1 50%, #fff5ee 100%);
-
             min-height: 100vh;
-
             overflow-x: hidden;
-
         }
 
         .handwritten {
-
             font-family: 'Dancing Script', cursive;
-
         }
 
         /* Loading Screen */
-
         #loading-screen {
-
             position: fixed;
-
             inset: 0;
-
             background: linear-gradient(135deg, #fff0f5 0%, #ffe4e1 50%, #fff5ee 100%);
-
             z-index: 9999;
-
             display: flex;
-
             flex-direction: column;
-
             align-items: center;
-
             justify-content: center;
-
             transition: opacity 0.5s ease, visibility 0.5s;
-
         }
 
         #loading-screen.hidden {
-
             opacity: 0;
-
             visibility: hidden;
-
             pointer-events: none;
-
         }
 
         .loader {
-
             width: 60px;
-
             height: 60px;
-
             border: 4px solid #ffe4e1;
-
             border-top-color: #ff6b9d;
-
             border-radius: 50%;
-
             animation: spin 1s linear infinite;
-
         }
 
         @keyframes spin {
-
             to { transform: rotate(360deg); }
-
         }
 
         .loading-text {
-
             margin-top: 20px;
-
             color: #ff6b9d;
-
             font-size: 1.2rem;
-
             animation: pulse 1.5s ease-in-out infinite;
-
         }
 
         @keyframes pulse {
-
             0%, 100% { opacity: 0.6; }
-
             50% { opacity: 1; }
-
         }
 
         /* --- Envelope Styles --- */
-
         .scene {
-
             perspective: 1200px;
-
             display: flex;
-
             justify-content: center;
-
             align-items: center;
-
             min-height: 100vh;
-
             width: 100%;
-
             padding: 20px;
-
         }
 
         .envelope-wrapper {
-
             position: relative;
-
             width: min(340px, 90vw);
-
             height: 240px;
-
             cursor: pointer;
-
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
             filter: drop-shadow(0 20px 30px rgba(255, 105, 180, 0.2));
-
         }
 
         .envelope-wrapper:hover {
-
             transform: translateY(-10px) scale(1.02);
-
         }
 
         .envelope {
-
             position: relative;
-
             width: 100%;
-
             height: 100%;
-
             background: var(--envelope-bg);
-
             border-radius: 0 0 12px 12px;
-
             box-shadow: inset 0 0 20px rgba(255, 182, 193, 0.3), 0 10px 20px rgba(0,0,0,0.05);
-
             overflow: hidden;
-
         }
 
         .envelope::before {
-
             content: '';
-
             position: absolute;
-
             inset: 0;
-
             background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
-
             opacity: 0.6;
-
             pointer-events: none;
-
         }
 
         .back-flap {
-
             position: absolute;
-
             bottom: 0;
-
             width: 100%;
-
             height: 60%;
-
             background: linear-gradient(to top, var(--envelope-darker), var(--envelope-dark));
-
             clip-path: polygon(0 100%, 50% 0, 100% 100%);
-
             z-index: 1;
-
         }
 
         .side-flap-left {
-
             position: absolute;
-
             left: 0;
-
             top: 0;
-
             width: 50%;
-
             height: 100%;
-
             background: linear-gradient(to right, var(--envelope-darker), var(--envelope-dark));
-
             clip-path: polygon(0 0, 100% 40%, 100% 100%, 0 100%);
-
             z-index: 2;
-
         }
 
         .side-flap-right {
-
             position: absolute;
-
             right: 0;
-
             top: 0;
-
             width: 50%;
-
             height: 100%;
-
             background: linear-gradient(to left, var(--envelope-darker), var(--envelope-dark));
-
             clip-path: polygon(100% 0, 0 40%, 0 100%, 100% 100%);
-
             z-index: 2;
-
         }
 
         .top-flap {
-
             position: absolute;
-
             top: 0;
-
             left: 0;
-
             width: 100%;
-
             height: 60%;
-
             background: linear-gradient(to bottom, #ffd1dc, var(--envelope-dark));
-
             clip-path: polygon(0 0, 100% 0, 50% 100%);
-
             transform-origin: top;
-
             transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s;
-
             z-index: 10;
-
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-
         }
 
         .top-flap::after {
-
             content: '';
-
             position: absolute;
-
             bottom: 0;
-
             left: 0;
-
             width: 100%;
-
             height: 20px;
-
             background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent);
-
             opacity: 0;
-
             transition: opacity 0.3s;
-
         }
 
         .envelope-wrapper:not(.open):hover .top-flap::after {
-
             opacity: 1;
-
         }
 
         .letter-card {
-
             position: absolute;
-
             top: 10px;
-
             left: 10px;
-
             width: calc(100% - 20px);
-
             height: calc(100% - 20px);
-
             background: #fffbf0;
-
             border-radius: 4px;
-
             z-index: 5;
-
             transform: translateY(0);
-
             transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s;
-
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-
             display: flex;
-
             flex-direction: column;
-
             align-items: center;
-
             justify-content: center;
-
             border: 1px solid #f0e6d2;
-
         }
 
         .wax-seal {
-
             position: absolute;
-
             top: 50%;
-
             left: 50%;
-
             transform: translate(-50%, -50%);
-
             width: 40px;
-
             height: 40px;
-
             background: radial-gradient(circle at 30% 30%, #ff6b9d, #c44569);
-
             border-radius: 50%;
-
             z-index: 15;
-
             box-shadow: 0 2px 5px rgba(0,0,0,0.2), inset 0 -2px 5px rgba(0,0,0,0.1);
-
             display: flex;
-
             align-items: center;
-
             justify-content: center;
-
             font-size: 20px;
-
             transition: transform 0.3s, opacity 0.3s;
-
             pointer-events: none;
-
         }
 
         .wax-seal::before {
-
             content: '💕';
-
             filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));
-
         }
 
         .envelope-wrapper.open {
-
             pointer-events: none;
-
         }
 
         .envelope-wrapper.open .top-flap {
-
             transform: rotateX(180deg);
-
             z-index: 0;
-
             transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-
         }
 
         .envelope-wrapper.open .wax-seal {
-
             transform: translate(-50%, -50%) scale(0);
-
             opacity: 0;
-
         }
 
         .envelope-wrapper.open .letter-card {
-
             transform: translateY(-180px) scale(1.1);
-
             z-index: 20;
-
             box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-
         }
 
         /* Content Card - Scrollable */
-
         #content-card {
-
             position: fixed;
-
             top: 0;
-
             left: 0;
-
             right: 0;
-
             bottom: 0;
-
             opacity: 0;
-
             pointer-events: none;
-
             transform: scale(0.9);
-
             transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-
             z-index: 30;
-
             overflow-y: auto;
-
             -webkit-overflow-scrolling: touch;
-
             background: rgba(255, 255, 255, 0.3);
-
             backdrop-filter: blur(10px);
-
             padding: 20px;
-
             display: flex;
-
             align-items: flex-start;
-
             justify-content: center;
-
         }
 
         #content-card.visible {
-
             opacity: 1;
-
             pointer-events: all;
-
             transform: scale(1);
-
         }
 
         .content-inner {
-
             background: white;
-
             width: 100%;
-
             max-width: 600px;
-
             border-radius: 24px;
-
             box-shadow: 0 25px 50px -12px rgba(255, 105, 180, 0.25);
-
             padding: 32px 24px;
-
             margin: 20px auto;
-
             border: 2px solid rgba(255, 182, 193, 0.3);
-
             position: relative;
-
         }
 
         @media (min-width: 640px) {
-
             .content-inner {
-
                 padding: 48px;
-
                 margin: 40px auto;
-
             }
-
         }
 
         /* List Items */
-
         .list-item {
-
             opacity: 0;
-
             transform: translateX(-20px);
-
             transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-
         }
 
         .list-item.show {
-
             opacity: 1;
-
             transform: translateX(0);
-
         }
 
         /* Game Area */
-
         #game-area {
-
             position: relative;
-
             height: 200px;
-
             width: 100%;
-
             background: linear-gradient(to bottom, #fff5f7, #ffeef2);
-
             border-radius: 16px;
-
             border: 2px dashed #ffcdd6;
-
             overflow: hidden;
-
             margin-top: 24px;
-
         }
 
         @media (max-width: 380px) {
-
             #game-area {
-
                 height: 180px;
-
             }
-
         }
 
         /* Pill-shaped buttons */
-
         .btn {
-
             padding: 14px 36px;
-
             border-radius: 9999px;
-
             font-weight: 700;
-
             font-size: 1rem;
-
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-
             position: absolute;
-
             cursor: pointer;
-
             border: none;
-
             outline: none;
-
             touch-action: manipulation;
-
             white-space: nowrap;
-
             min-width: 100px;
-
             text-align: center;
-
         }
 
         @media (max-width: 380px) {
-
             .btn {
-
                 padding: 12px 28px;
-
                 font-size: 0.95rem;
-
                 min-width: 90px;
-
             }
-
         }
 
         .btn-red {
-
             background: linear-gradient(135deg, #ff5757, #ff4757);
-
             color: white;
-
             top: 50%;
-
             left: 25%;
-
             transform: translate(-50%, -50%);
-
         }
 
         .btn-red:hover, .btn-red:active {
-
             transform: translate(-50%, -50%) scale(1.05);
-
             box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
-
         }
 
         .btn-green {
-
             background: linear-gradient(135deg, #2ed573, #26de81);
-
             color: white;
-
             top: 50%;
-
             left: 75%;
-
             transform: translate(-50%, -50%);
-
             z-index: 10;
-
         }
 
         .btn-green:hover, .btn-green:active {
-
             transform: translate(-50%, -50%) scale(1.1);
-
             box-shadow: 0 6px 20px rgba(46, 213, 115, 0.4);
-
         }
 
         /* Cute Heart Animation */
-
         .floating-heart {
-
             position: fixed;
-
             font-size: 24px;
-
             pointer-events: none;
-
             z-index: 100;
-
             animation: floatHeart 3s ease-in forwards;
-
         }
 
         @keyframes floatHeart {
-
             0% {
-
                 transform: translateY(0) scale(0) rotate(0deg);
-
                 opacity: 0;
-
             }
-
             10% {
-
                 transform: translateY(-20px) scale(1.2) rotate(-10deg);
-
                 opacity: 1;
-
             }
-
             25% {
-
                 transform: translateY(-50px) scale(1) rotate(10deg);
-
             }
-
             50% {
-
                 transform: translateY(-100px) scale(1.1) rotate(-5deg);
-
                 opacity: 0.8;
-
             }
-
             75% {
-
                 transform: translateY(-150px) scale(0.9) rotate(5deg);
-
                 opacity: 0.5;
-
             }
-
             100% {
-
                 transform: translateY(-200px) scale(0.5) rotate(0deg);
-
                 opacity: 0;
-
             }
-
         }
 
         /* Cat with Rose Animation */
-
         #cat-container {
-
             position: fixed;
-
             bottom: -400px;
-
             left: 50%;
-
             transform: translateX(-50%);
-
             transition: bottom 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-
             z-index: 50;
-
             text-align: center;
-
             pointer-events: none;
-
         }
 
         #cat-container.pop-up {
-
             bottom: 20px;
-
         }
 
         @media (min-height: 700px) {
-
             #cat-container.pop-up {
-
                 bottom: 40px;
-
             }
-
         }
 
         .cat-wrapper {
-
             position: relative;
-
             display: inline-block;
-
         }
 
         .rose {
-
             position: absolute;
-
             top: -20px;
-
             right: -30px;
-
             font-size: 3rem;
-
             animation: roseWiggle 2s ease-in-out infinite;
-
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
-
             z-index: 10;
-
         }
 
         @keyframes roseWiggle {
-
             0%, 100% { transform: rotate(-10deg) scale(1); }
-
             25% { transform: rotate(10deg) scale(1.1); }
-
             50% { transform: rotate(-5deg) scale(1); }
-
             75% { transform: rotate(5deg) scale(1.05); }
-
         }
 
         .cat-emoji {
-
             font-size: 6rem;
-
             filter: drop-shadow(0 8px 16px rgba(0,0,0,0.15));
-
             animation: catBounce 2s ease-in-out infinite;
-
         }
 
         @media (min-width: 768px) {
-
             .cat-emoji {
-
                 font-size: 8rem;
-
             }
-
             .rose {
-
                 font-size: 4rem;
-
                 top: -30px;
-
                 right: -40px;
-
             }
-
         }
 
         @keyframes catBounce {
-
             0%, 100% { transform: translateY(0); }
-
             50% { transform: translateY(-10px); }
-
         }
 
         .cat-bubble {
-
             background: white;
-
             padding: 20px 28px;
-
             border-radius: 24px;
-
             box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-
             margin-bottom: 20px;
-
             position: relative;
-
             display: inline-block;
-
             border: 3px solid #ffd1dc;
-
             animation: float 3s ease-in-out infinite;
-
             max-width: 300px;
-
         }
 
         @media (max-width: 380px) {
-
             .cat-bubble {
-
                 padding: 16px 20px;
-
                 max-width: 260px;
-
             }
-
         }
 
         @keyframes float {
-
             0%, 100% { transform: translateY(0); }
-
             50% { transform: translateY(-10px); }
-
         }
 
         .cat-bubble::after {
-
             content: '';
-
             position: absolute;
-
             bottom: -12px;
-
             left: 50%;
-
             transform: translateX(-50%);
-
             border-width: 12px 12px 0;
-
             border-style: solid;
-
             border-color: white transparent;
-
             display: block;
-
             width: 0;
-
         }
 
         .cat-bubble::before {
-
             content: '';
-
             position: absolute;
-
             bottom: -15px;
-
             left: 50%;
-
             transform: translateX(-50%);
-
             border-width: 15px 15px 0;
-
             border-style: solid;
-
             border-color: #ffd1dc transparent;
-
             display: block;
-
             width: 0;
-
             z-index: -1;
-
         }
 
         /* Floating Background Elements */
-
         .floating-shape {
-
             position: fixed;
-
             opacity: 0.1;
-
             animation: drift 25s infinite linear;
-
             pointer-events: none;
-
             font-size: 3rem;
-
             z-index: 0;
-
         }
 
         @keyframes drift {
-
             from { transform: translateX(-100px) rotate(0deg); }
-
             to { transform: translateX(calc(100vw + 100px)) rotate(360deg); }
-
         }
 
         .sparkle {
-
             position: fixed;
-
             pointer-events: none;
-
             animation: sparkle 1.5s linear forwards;
-
             z-index: 100;
-
         }
 
         @keyframes sparkle {
-
             0% { transform: scale(0) rotate(0deg); opacity: 0; }
-
             50% { transform: scale(1) rotate(180deg); opacity: 1; }
-
             100% { transform: scale(0) rotate(360deg); opacity: 0; }
-
         }
 
         html {
-
             scroll-behavior: smooth;
-
         }
 
         #content-card::-webkit-scrollbar {
-
             width: 6px;
-
         }
 
         #content-card::-webkit-scrollbar-track {
-
             background: transparent;
-
         }
 
         #content-card::-webkit-scrollbar-thumb {
-
             background: rgba(255, 182, 193, 0.5);
-
             border-radius: 3px;
-
         }
-
     </style>
-
 </head>
-
 <body>
 
     <!-- Loading Screen -->
-
     <div id="loading-screen">
-
         <div class="loader"></div>
-
         <div class="loading-text handwritten text-2xl">Loading something special...</div>
-
     </div>
 
     <!-- Background Decorations -->
-
     <div class="floating-shape" style="top: 10%; animation-delay: 0s;">🌸</div>
-
     <div class="floating-shape" style="top: 30%; animation-delay: -8s;">💖</div>
-
     <div class="floating-shape" style="top: 60%; animation-delay: -16s;">✨</div>
-
     <div class="floating-shape" style="top: 80%; animation-delay: -5s;">🌺</div>
 
     <!-- Intro View -->
-
     <div id="intro-view" class="scene z-20 transition-opacity duration-700">
-
         <div class="text-center px-4">
-
             <h1 class="text-4xl md:text-6xl text-pink-500 mb-8 handwritten font-bold drop-shadow-sm animate-pulse">
-
                 For Nancy 💝
-
             </h1>
-
             
-
             <div class="envelope-wrapper mx-auto" onclick="openEnvelope()" id="envelopeWrapper">
-
                 <div class="envelope">
-
                     <div class="back-flap"></div>
-
                     <div class="side-flap-left"></div>
-
                     <div class="side-flap-right"></div>
-
                     
-
                     <div class="letter-card">
-
                         <div class="text-pink-400 text-5xl md:text-6xl mb-3">💌</div>
-
                         <p class="handwritten text-xl md:text-2xl text-gray-600">Open me gently...</p>
-
                     </div>
-
                     
-
                     <div class="top-flap"></div>
-
                     <div class="wax-seal"></div>
-
                 </div>
-
             </div>
-
             
-
             <p class="mt-8 text-pink-400 font-medium tracking-widest text-xs md:text-sm uppercase opacity-70">
-
                 Tap to reveal the magic ✨
-
             </p>
-
         </div>
-
     </div>
 
     <!-- Main Content - Scrollable -->
-
     <div id="content-card" class="hidden">
-
         <div class="content-inner">
-
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-300 via-rose-300 to-purple-300 rounded-t-3xl"></div>
-
             
-
             <div class="text-center mb-6 md:mb-8">
-
                 <h2 class="text-4xl md:text-5xl text-pink-500 handwritten mb-2">My Dearest Nancy</h2>
-
                 <div class="inline-block bg-pink-50 px-4 py-1.5 rounded-full border border-pink-200">
-
                     <span class="text-pink-500 text-xs md:text-sm font-bold tracking-wide">✨ 5FT+ OF PURE SUNSHINE ✨</span>
-
                 </div>
-
             </div>
 
             <div class="mb-6 md:mb-8">
-
                 <p class="text-base md:text-lg text-gray-600 text-center mb-4 md:mb-6 leading-relaxed px-2">
-
                     I made this little list because you deserve to know how amazing you are:
-
                 </p>
-
                 <ul id="good-things-list" class="space-y-3">
-
                     <!-- Items injected via JS -->
-
                 </ul>
-
             </div>
 
             <div class="border-t-2 border-dashed border-pink-200 pt-6 md:pt-8">
-
-                <h3 class="text-xl md:text-2xl text-center text-gray-800 font-bold mb-4 handwritten">
-
+                <h3 id="question-text" class="text-xl md:text-2xl text-center text-gray-800 font-bold mb-4 handwritten">
                     Will you be my chat partner? 💭
-
                 </h3>
-
                 
-
                 <div id="game-area">
-
                     <button id="btn-no" class="btn btn-red" ontouchstart="moveButton()" onmouseenter="moveButton()" onclick="moveButton()">
-
                         No 🙈
-
                     </button>
-
                     <button id="btn-yes" class="btn btn-green" onclick="sayYes()">
-
                         Yes! 🎉
-
                     </button>
-
                 </div>
-
                 <p id="hint-text" class="text-center text-xs text-gray-400 mt-3 italic">
-
                     (The "No" button is feeling shy... try to catch it!)
-
                 </p>
-
             </div>
-
         </div>
-
     </div>
 
     <!-- Success Cat with Rose -->
-
     <div id="cat-container">
-
         <div class="cat-bubble handwritten text-xl md:text-2xl text-pink-600 font-bold leading-relaxed">
-
             I knew you were the best!<br>
-
-            <span class="text-base md:text-lg font-normal text-gray-500">Let's chat forever! 💕</span>
-
+            <span class="text-base md:text-lg font-normal text-gray-500">Will you be my partner? 💕</span>
         </div>
-
         <div class="cat-wrapper">
-
             <div class="rose">🌹</div>
-
             <div class="cat-emoji">🐱</div>
-
         </div>
-
     </div>
 
     <script>
-
         // ==================== CUSTOMIZATION SECTION ====================
-
         
-
         const CONFIG = {
-
             name: "Nancy",
-
             tagline: "5FT+ OF PURE SUNSHINE",
-
             compliments: [
-
                 { icon: "☀️", text: "Your smile brightens up every room you enter" },
-
                 { icon: "📏", text: "You stand tall (5ft+) above all the negativity" },
-
                 { icon: "🌸", text: "Your kindness is absolutely contagious" },
-
                 { icon: "😄", text: "You have an amazing sense of humor" },
-
                 { icon: "🎨", text: "You're incredibly creative and smart" },
-
                 { icon: "✨", text: "You make ordinary moments feel magical" },
-
                 { icon: "💪", text: "You're strong, beautiful, and unique" }
-
             ],
-
             question: "Will you be my chat partner?",
-
             buttonYes: "Yes! 🎉",
-
             buttonNo: "No 🙈",
-
             successMessage: "I knew you were the best!",
-
-            successSubMessage: "Let's chat forever! 💕"
-
+            successSubMessage: "Will you be my partner? 💕"
         };
 
         // ==================== END CUSTOMIZATION ====================
 
         // Apply configuration
-
         document.querySelector('h1').innerHTML = `For ${CONFIG.name} 💝`;
-
         document.querySelector('h2').innerHTML = `My Dearest ${CONFIG.name}`;
-
         document.querySelector('.text-pink-500.text-xs').textContent = `✨ ${CONFIG.tagline} ✨`;
-
-        document.querySelector('h3').innerHTML = `${CONFIG.question} 💭`;
-
+        document.getElementById('question-text').innerHTML = `${CONFIG.question} 💭`;
         document.getElementById('btn-yes').textContent = CONFIG.buttonYes;
-
         document.getElementById('btn-no').textContent = CONFIG.buttonNo;
-
         document.querySelector('.cat-bubble').innerHTML = `
-
             ${CONFIG.successMessage}<br>
-
             <span class="text-base md:text-lg font-normal text-gray-500">${CONFIG.successSubMessage}</span>
-
         `;
 
         // Loading screen
-
         window.addEventListener('load', () => {
-
             setTimeout(() => {
-
                 document.getElementById('loading-screen').classList.add('hidden');
-
             }, 1500);
-
         });
 
         // Create floating hearts animation
-
         function createFloatingHearts(x, y) {
-
             const hearts = ['💖', '💕', '💗', '💓', '💝', '🌸', '✨'];
-
             const colors = ['#ff6b9d', '#ff758c', '#ffb7c5', '#ffd1dc', '#ff9eb5'];
-
             
-
             for (let i = 0; i < 15; i++) {
-
                 setTimeout(() => {
-
                     const heart = document.createElement('div');
-
                     heart.className = 'floating-heart';
-
                     heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
-
                     heart.style.left = (x + (Math.random() - 0.5) * 100) + 'px';
-
                     heart.style.top = (y + (Math.random() - 0.5) * 50) + 'px';
-
                     heart.style.fontSize = (Math.random() * 20 + 20) + 'px';
-
                     heart.style.color = colors[Math.floor(Math.random() * colors.length)];
-
                     heart.style.animationDelay = (Math.random() * 0.5) + 's';
-
                     heart.style.animationDuration = (2.5 + Math.random() * 1) + 's';
-
                     document.body.appendChild(heart);
-
                     
-
                     setTimeout(() => heart.remove(), 3500);
-
                 }, i * 100);
-
             }
-
         }
 
         function openEnvelope() {
-
             const wrapper = document.getElementById('envelopeWrapper');
-
             const intro = document.getElementById('intro-view');
-
             const content = document.getElementById('content-card');
-
             const rect = wrapper.getBoundingClientRect();
-
             const centerX = rect.left + rect.width / 2;
-
             const centerY = rect.top + rect.height / 2;
-
             
-
             // Create floating hearts from envelope center
-
             createFloatingHearts(centerX, centerY);
-
             
-
             wrapper.classList.add('open');
-
             
-
             setTimeout(() => {
-
                 intro.style.opacity = '0';
-
                 setTimeout(() => {
-
                     intro.style.display = 'none';
-
                     content.classList.remove('hidden');
-
                     void content.offsetWidth;
-
                     content.classList.add('visible');
-
                     startListAnimation();
-
                 }, 700);
-
             }, 1000);
-
         }
 
         function startListAnimation() {
-
             const list = document.getElementById('good-things-list');
-
             list.innerHTML = '';
-
             
-
             CONFIG.compliments.forEach((item, index) => {
-
                 const li = document.createElement('li');
-
                 li.className = 'list-item flex items-center gap-3 md:gap-4 bg-gradient-to-r from-pink-50 to-white p-3 md:p-4 rounded-xl border border-pink-100 shadow-sm';
-
                 li.innerHTML = `
-
                     <span class="text-xl md:text-2xl bg-white p-1.5 md:p-2 rounded-full shadow-sm flex-shrink-0">${item.icon}</span>
-
                     <span class="text-gray-700 text-sm md:text-base font-medium leading-snug">${item.text}</span>
-
                 `;
-
                 list.appendChild(li);
-
                 
-
                 setTimeout(() => li.classList.add('show'), index * 150);
-
             });
-
         }
 
         const btnNo = document.getElementById('btn-no');
-
         const gameArea = document.getElementById('game-area');
-
         let moveCount = 0;
 
         function moveButton() {
-
             const rect = gameArea.getBoundingClientRect();
-
             const btnRect = btnNo.getBoundingClientRect();
-
             
-
             const padding = 10;
-
             const maxX = rect.width - btnRect.width - padding * 2;
-
             const maxY = rect.height - btnRect.height - padding * 2;
-
             
-
             const newX = Math.random() * maxX + padding;
-
             const newY = Math.random() * maxY + padding;
-
             
-
             btnNo.style.left = newX + 'px';
-
             btnNo.style.top = newY + 'px';
-
             btnNo.style.transform = 'none';
-
             
-
             moveCount++;
-
             const texts = ["No", "Can't catch me!", "Too slow!", "Nope!", "Missed!", "Try again!", "Almost!", "Nah!"];
-
             if(moveCount > 2) {
-
                 btnNo.innerText = texts[Math.floor(Math.random() * texts.length)];
-
             }
-
             
-
             const btnYes = document.getElementById('btn-yes');
-
             btnYes.style.transform = 'translate(-50%, -50%) scale(1.15)';
-
             setTimeout(() => {
-
                 btnYes.style.transform = 'translate(-50%, -50%) scale(1)';
-
             }, 200);
-
         }
 
         function createConfetti() {
-
             const colors = ['#ff6b9d', '#ffd93d', '#6bcf7f', '#4d96ff', '#ff9f43', '#ff758c'];
-
             
-
             for(let i=0; i<80; i++) {
-
                 const confetti = document.createElement('div');
-
                 const color = colors[Math.floor(Math.random() * colors.length)];
-
                 
-
                 confetti.style.position = 'fixed';
-
                 confetti.style.left = Math.random() * 100 + 'vw';
-
                 confetti.style.top = '-10px';
-
                 confetti.style.width = (Math.random() * 10 + 8) + 'px';
-
                 confetti.style.height = (Math.random() * 10 + 8) + 'px';
-
                 confetti.style.backgroundColor = color;
-
                 confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-
                 confetti.style.opacity = Math.random() * 0.5 + 0.5;
-
                 confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
-
                 confetti.style.animation = `fall ${Math.random() * 3 + 2}s linear forwards`;
-
                 confetti.style.zIndex = '100';
-
                 
-
                 if(Math.random() > 0.6) {
-
                     confetti.innerHTML = ['💖', '💕', '🌸', '✨'][Math.floor(Math.random() * 4)];
-
                     confetti.style.backgroundColor = 'transparent';
-
                     confetti.style.fontSize = '20px';
-
                     confetti.style.width = 'auto';
-
                     confetti.style.height = 'auto';
-
                 }
-
                 
-
                 document.body.appendChild(confetti);
-
                 setTimeout(() => confetti.remove(), 5000);
-
             }
-
         }
 
         function sayYes() {
-
             const gameAreaEl = document.getElementById('game-area');
-
             const hint = document.getElementById('hint-text');
-
+            const questionText = document.getElementById('question-text');
             const cat = document.getElementById('cat-container');
-
-            const title = document.querySelector('h3');
-
             
-
             createConfetti();
-
             
-
-            gameAreaEl.style.transform = 'scale(0)';
-
+            // Hide game area and hint with fade out
+            gameAreaEl.style.transition = 'all 0.5s ease';
             gameAreaEl.style.opacity = '0';
-
-            hint.style.display = 'none';
-
+            gameAreaEl.style.transform = 'scale(0)';
             
-
-            title.innerHTML = "Yay! You're the best! 🎊💕";
-
-            title.className = "text-2xl md:text-3xl text-center text-pink-600 font-bold mb-4 handwritten animate-pulse";
-
+            hint.style.transition = 'opacity 0.3s ease';
+            hint.style.opacity = '0';
             
-
+            // Update question text to remove "chat"
             setTimeout(() => {
-
+                gameAreaEl.style.display = 'none';
+                hint.style.display = 'none';
+                
+                // Change "chat partner" to just "partner"
+                questionText.innerHTML = "Will you be my partner? 💕";
+                questionText.classList.add('text-pink-600', 'animate-pulse');
+            }, 500);
+            
+            // Show cat
+            setTimeout(() => {
                 cat.classList.add('pop-up');
-
-            }, 300);
-
+            }, 800);
         }
 
         const style = document.createElement('style');
-
         style.innerHTML = `
-
             @keyframes fall {
-
                 to { transform: translateY(105vh) rotate(720deg); opacity: 0; }
-
             }
-
         `;
-
         document.head.appendChild(style);
 
         let lastTouchEnd = 0;
-
         document.addEventListener('touchend', function (event) {
-
             const now = (new Date()).getTime();
-
             if (now - lastTouchEnd <= 300) {
-
                 event.preventDefault();
-
             }
-
             lastTouchEnd = now;
-
         }, false);
-
     </script>
-
 </body>
-
 </html>
